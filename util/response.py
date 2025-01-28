@@ -24,3 +24,13 @@ class Response:
 
     def to_data(self):
         pass
+
+def test1():
+    res = Response() 
+    res.text("hello")
+    expected = b'HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 5\r\n\r\nhello'
+    acutal = res.to_data()
+    assert acutal == expected
+
+if __name__ == '__main__':
+    test1()
