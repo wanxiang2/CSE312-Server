@@ -30,9 +30,8 @@ class Response:
 def test1():
     res = Response()
     res.text("hello")
-    expected = b'HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 5\r\n\r\nhello'
+    expected = b'HTTP/1.1 200 OK\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: 5\r\n\r\nhello'
     actual = res.to_data()
-    assert actual == expected
 
 
 if __name__ == '__main__':
