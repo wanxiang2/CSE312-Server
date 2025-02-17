@@ -46,9 +46,8 @@ def create_message(request, handler):
 
             user_collection.insert_one(user_entry)
         
-            session = session + "; Max-Age=10800; HttpOnly"
-            cookie_headers["session"] = session
-            session = session.rstrip("; Max-Age=10800; HttpOnly")
+            session_header = session + "; Max-Age=10800; HttpOnly"
+            cookie_headers["session"] = session_header
 
     else:
         #print("\n\nC\n\n")
@@ -63,11 +62,11 @@ def create_message(request, handler):
         
         user_collection.insert_one(user_entry)
 
-        session = session + "; Max-Age=10800; HttpOnly"
-        cookie_headers["session"] = session
-        session = session.rstrip("; Max-Age=10800; HttpOnly")
+        session_header = session + "; Max-Age=10800; HttpOnly"
+        cookie_headers["session"] = session_header
 
         
+    #print("\n\n" + str(session) + "\n\n")
 
     #cookie_headers["id"] = message_id
 
@@ -88,6 +87,9 @@ def create_message(request, handler):
     # This is to add in a "nickname" field to the message if the nickname() function was called
     # and thus that author's user collection entry has a nickname field.
     results = list(user_collection.find({"session": session}))
+
+    # print("\n\n" + str(results) + "\n\n")
+
     if "nickname" in results[0]:
         message_nickname = results[0]["nickname"]
         database_entry["nickname"] = message_nickname
@@ -153,7 +155,7 @@ def update_message(request, handler):
     request_body = json.loads(request.body.decode())
     updated_message = request_body["content"]
 
-    message_id = request.path.lstrip("/api/chats/")
+    message_id = request.path.removeprefix("/api/chats/")
     if "session" in request.cookies:
         user_results = list(user_collection.find({"session": request.cookies["session"]}))
         author_of_session = None
@@ -161,7 +163,7 @@ def update_message(request, handler):
             author_of_session = user_results[0]["author"]
         message_results = list(chat_collection.find({"id": message_id, "author": author_of_session}))
         if user_results and message_results:
-            update = chat_collection.update_one({"id": message_id, "author": author_of_session}, {"$set": {"content": updated_message, "updated": True}})
+            update = chat_collection.update_one({"id": message_id, "author": author_of_session}, {"$set": {"content": html.escape(updated_message), "updated": True}})
 
             response_headers["Content-Type"] = "text/plain; charset=UTF-8"
 
@@ -187,7 +189,7 @@ def delete_message(request, handler):
     res = Response()
     response_headers = {}
 
-    message_id = request.path.lstrip("/api/chats/")
+    message_id = request.path.removeprefix("/api/chats/")
     if "session" in request.cookies:
         user_results = list(user_collection.find({"session": request.cookies["session"]}))
         author_of_session = None
@@ -223,7 +225,7 @@ def add_emoji(request, handler):
 
     cookie_headers = {}
 
-    message_id = request.path.lstrip("/api/reaction/")
+    message_id = request.path.removeprefix("/api/reaction/")
 
     emoji_author = ""
 
@@ -236,7 +238,7 @@ def add_emoji(request, handler):
         user_entry["session"] = session
         user_collection.insert_one(user_entry)
 
-        session = session + "; Max-Age=10800"
+        session = session + "; Max-Age=10800; HttpOnly"
         cookie_headers["session"] = session
         res.cookies(cookie_headers)
 
@@ -255,7 +257,7 @@ def add_emoji(request, handler):
             user_entry["session"] = session
             user_collection.insert_one(user_entry)
 
-            session = session + "; Max-Age=10800"
+            session = session + "; Max-Age=10800; HttpOnly"
             cookie_headers["session"] = session
             res.cookies(cookie_headers)
 
@@ -266,8 +268,9 @@ def add_emoji(request, handler):
     request_body = json.loads(request.body)
     user_emoji = request_body["emoji"]
 
-    print("\n\nPrinting message to add emoji!!!\n\n")
-    print(str(list(chat_collection.find({"id": message_id}))) + "\n")
+    # print("\n\nPrinting message to add emoji!!!\n\n")
+    # print(str(list(chat_collection.find({"id": message_id}))) + "\n")
+
 
     message_to_add_emoji = list(chat_collection.find({"id": message_id}))[0]
 
@@ -303,10 +306,10 @@ def remove_emoji(request, handler):
     res = Response()
     response_headers = {}
 
-    message_id = request.path.lstrip("/api/reaction/")
+    message_id = request.path.removeprefix("/api/reaction/")
 
     if "session" in request.cookies:
-        print("\n\nA\n\n")
+        #print("\n\nA\n\n")
 
         user_results = list(user_collection.find({"session": request.cookies["session"]}))
         emoji_author = ""
@@ -317,10 +320,10 @@ def remove_emoji(request, handler):
 
         message_to_delete_emoji = list(chat_collection.find({"id": message_id}))
         if user_results and message_to_delete_emoji:
-            print("\n\nB\n\n")
+            #print("\n\nB\n\n")
 
 
-            print("\n\n" + str(message_to_delete_emoji) + "\n\n")
+            #print("\n\n" + str(message_to_delete_emoji) + "\n\n")
             current_reactions = message_to_delete_emoji[0]["reactions"]
 
             request_body = json.loads(request.body)
@@ -328,11 +331,11 @@ def remove_emoji(request, handler):
 
             if user_emoji in current_reactions:
 
-                print("\n\nC\n\n")
+                #print("\n\nC\n\n")
 
                 if emoji_author in current_reactions[user_emoji]:
 
-                    print("\n\nD\n\n")
+                    #print("\n\nD\n\n")
 
 
                     current_reactions[user_emoji].remove(emoji_author)
@@ -375,8 +378,8 @@ def nickname(request, handler):
             request_body = json.loads(request.body)
             user_nickname = request_body["nickname"]
         
-            user_update_nickname = user_collection.update_one({"author": author}, {"$set": {"nickname": user_nickname}})
-            update_nickname = chat_collection.update_many({"author": author}, {"$set": {"nickname": user_nickname}})
+            user_update_nickname = user_collection.update_one({"author": author}, {"$set": {"nickname": html.escape(user_nickname)}})
+            update_nickname = chat_collection.update_many({"author": author}, {"$set": {"nickname": html.escape(user_nickname)}})
 
             response_headers["Content-Type"] = "text/plain; charset=UTF-8"
 
