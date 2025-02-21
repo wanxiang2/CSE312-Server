@@ -38,9 +38,7 @@ async function handleSubmit(event) {
 
   const formData = new URLSearchParams();
   formData.append("username", username);
-  if (password) {
-    formData.append("password", password);
-  }
+  formData.append("password", password);
 
   try {
     const response = await fetch("/api/users/settings", {
