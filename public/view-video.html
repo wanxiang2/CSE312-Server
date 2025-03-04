@@ -135,22 +135,27 @@
     }
 
     async function fetchTranscription(videoId) {
-        try {
-            const response = await fetch(`/api/transcriptions/${videoId}`);
+      try {
+        const response = await fetch(`/api/transcriptions/${videoId}`);
 
-            if (response.ok) {
-                const data = await response.json();
-                console.log("Transcription URL:", data.s3_url);
-                // For now, we're just logging the SRT URL
-                return data.s3_url;
-            } else {
-                const errorData = await response.json();
-                console.error("Error fetching transcription:", errorData.error);
-            }
-        } catch (error) {
-            console.error("Error fetching transcription:", error);
+        if (response.ok) {
+          // Create and add the subtitle track
+          const track = document.createElement("track");
+          track.kind = "subtitles";
+          track.label = "English";
+          track.srclang = "en";
+          track.src = `/api/transcriptions/${videoId}`;
+          track.default = true;
+
+          // Add the track to the video element
+          videoPlayer.appendChild(track);
+        } else {
+          const errorData = await response.json();
+          console.error("Error fetching transcription:", errorData.error);
         }
-        return null;
+      } catch (error) {
+        console.error("Error fetching transcription:", error);
+      }
     }
 
     // Load the video when the page loads

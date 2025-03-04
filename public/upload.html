@@ -34,14 +34,14 @@
             id="video-file"
             name="video"
             class="hidden"
-            accept=".mp4,.mkv"
+            accept=".mp4"
             required
           />
           <div
             id="upload-placeholder"
             class="text-gray-400 group-hover:text-gray-300"
           >
-            Click to select a video (MP4 or MKV only)
+            Click to select a video (MP4 only)
           </div>
           <div id="file-info" class="hidden flex items-center gap-2">
             <span id="filename" class="text-sm"></span>
@@ -94,9 +94,9 @@
       const file = fileInput.files[0];
       const fileExtension = file.name.split(".").pop().toLowerCase();
 
-      if (!["mp4", "mkv"].includes(fileExtension)) {
+      if (!["mp4"].includes(fileExtension)) {
         alertManager.newAlert(
-          "Please select an MP4 or MKV video file.",
+          "Please select an MP4 video file.",
           "error",
           5000,
           "Upload Error"
