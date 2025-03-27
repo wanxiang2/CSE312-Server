@@ -140,7 +140,7 @@
             data.text,
             data.fromUser === currentUsername
           );
-        } else if (data.messageType === "user_list") {
+        } else if (data.messageType === "all_users_list") {
           updateUserList(data.users);
         } else if (data.messageType === "message_history") {
           messagesContainer.innerHTML = "";
@@ -191,4 +191,7 @@
   });
 
   initWebSocket();
+
+  window.initWebSocket = initWebSocket;
+  window.sendMessage = sendMessage;
 </script>
