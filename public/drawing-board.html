@@ -58,7 +58,9 @@
   </div>
 </div>
 
-<script>
+<script type="module">
+  import { websocketUrl } from "/public/js/utils.js";
+
   let ws = null;
   let isDrawing = false;
   let currentColor = "#000000";
@@ -92,7 +94,7 @@
       }
 
       // If authenticated, proceed with WebSocket connection
-      ws = new WebSocket(`ws://${window.location.host}/websocket`);
+      ws = new WebSocket(websocketUrl);
 
       ws.onopen = () => {
         console.log("Connected to WebSocket");
@@ -214,4 +216,11 @@
 
   // Initialize WebSocket connection
   initWebSocket();
+
+  window.initWebSocket = initWebSocket;
+  window.drawLine = drawLine;
+  window.setColor = setColor;
+  window.startDrawing = startDrawing;
+  window.stopDrawing = stopDrawing;
+  window.draw = draw;
 </script>

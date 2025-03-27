@@ -52,7 +52,7 @@
 </div>
 
 <script type="module">
-  import { html } from "/public/js/utils.js";
+  import { html, websocketUrl } from "/public/js/utils.js";
 
   let ws = null;
   let selectedUser = null;
@@ -124,7 +124,7 @@
       const userData = await response.json();
       currentUsername = userData.username;
 
-      ws = new WebSocket(`ws://${window.location.host}/websocket`);
+      ws = new WebSocket(websocketUrl);
 
       ws.onopen = () => {
         console.log("Connected to WebSocket");
@@ -166,6 +166,7 @@
         alertManager.newAlert("WebSocket error occurred", "error", 5000);
       };
     } catch (error) {
+      console.error("Error initializing WebSocket:", error);
       alertManager.newAlert("Failed to connect", "error", 5000);
     }
   }
