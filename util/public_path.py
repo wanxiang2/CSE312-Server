@@ -68,6 +68,59 @@ def public_path(request, handler):
 
         res.bytes(image_bits)
 
+    elif request_path.endswith(".png"):
+        with open("." + request_path, "rb") as file:
+            image_bits = file.read()
+
+        image_length = len(image_bits)
+
+        response_headers["Content-Type"] = "image/png"
+        response_headers["Content-Length"] = str(image_length)
+        res.headers(response_headers)
+
+        res.bytes(image_bits)
+
+    elif request_path.endswith(".mp4"):
+        with open("." + request_path, "rb") as file:
+            video_bits = file.read()
+
+        video_length = len(video_bits)
+
+        response_headers["Content-Type"] = "video/mp4"
+        response_headers["Content-Length"] = str(video_length)
+        res.headers(response_headers)
+
+        res.bytes(video_bits)
+
+        # print("\nWe Called the mp4 MIME\n")
+        # print(res.headers)
+
+    # Why did it show ./public/videos/public/videos/file?
+    elif request_path.endswith(".m3u8"):
+        with open("." + request_path, "r") as file:
+            m3u8_bits = file.read()
+
+        m3u8_length = len(m3u8_bits)
+
+        response_headers["Content-Type"] = "audio/mpegurl"
+        response_headers["Content-Length"] = str(m3u8_length)
+        res.headers(response_headers)
+
+        res.text(m3u8_bits)
+
+    elif request_path.endswith(".ts"):
+        with open("." + request_path, "rb") as file:
+            ts_bits = file.read()
+
+        ts_length = len(ts_bits)
+
+        response_headers["Content-Type"] = "audio/mpegurl"
+        response_headers["Content-Length"] = str(ts_length)
+        res.headers(response_headers)
+
+        res.bytes(ts_bits)
+
+
 
     elif request_path.endswith(".js"):
         with open("." + request_path, "rb") as file:

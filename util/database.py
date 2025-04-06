@@ -19,7 +19,14 @@ chat_collection = db["chat"]
 
 user_collection = db["users"]
 
+account_collection = db["accounts"]
+
+oauth_collection = db["oauth_accounts"]
+
+video_collection = db["videos"]
+
 
 if __name__ == '__main__':
     chat_collection.delete_many({})
     user_collection.delete_many({})
+    video_collection.delete_many({})

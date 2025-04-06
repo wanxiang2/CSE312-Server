@@ -3,16 +3,31 @@ class Request:
     def __init__(self, request: bytes):
         # TODO: parse the bytes of the request and populate the following instance variables
 
-        decoded_request = request.decode()
-        header_and_body = decoded_request.split("\r\n\r\n")
+        # if(len(request) < 1):   # TA wrote this to stop the Chrome no body error.
+        #     return
 
-        print(header_and_body)
+        # decoded_request = request.decode()
+        # header_and_body = decoded_request.split("\r\n\r\n")
 
-        request_lines = header_and_body[0].split("\r\n")
+        separator = b"\r\n\r\n"
+        split_index = request.find(separator)
+
+        header_and_body = []
+
+        if split_index != -1:
+            header_and_body.append(request[:split_index])
+            header_and_body.append(request[split_index + len(separator):])
+        else:
+            header_and_body.append(request)
+            header_and_body.append(b"")
+
+        # print(header_and_body)
+
+        request_lines = header_and_body[0].decode().split("\r\n")
 
         request_line_values = request_lines[0].split()
 
-        self.body = header_and_body[1].encode() #if len(header_and_body) > 1 else None
+        self.body = header_and_body[1] #if len(header_and_body) > 1 else None
         self.method = request_line_values[0].upper()
         self.path = request_line_values[1]
         self.http_version = request_line_values[2]
@@ -45,6 +60,9 @@ class Request:
                     cookie_value = my_cookie[i+1:].strip()
 
                     self.cookies[cookie_name] = cookie_value
+
+        # print("\nRequest Headers\n")
+        # print(self.headers)
 
         #print("\n\n\nRequest Print Message!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n")
         #print(str(self.cookies))

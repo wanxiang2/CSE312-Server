@@ -8,7 +8,8 @@ COPY ./server.py ./server.py
 COPY ./public ./public
 COPY ./util ./util
 
-RUN pip3 install -r requirements.txt
+RUN pip3 install -r requirements.txt && apt-get update && apt-get install -y ffmpeg
+RUN pip install ffmpeg-python
 
 EXPOSE 8000
 

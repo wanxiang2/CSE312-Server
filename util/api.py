@@ -6,6 +6,8 @@ from util.database import user_collection
 import json
 import html
 import requests
+import hashlib
+from util.database import account_collection
 
 def create_message(request, handler):
     res = Response()
@@ -46,7 +48,7 @@ def create_message(request, handler):
 
             user_collection.insert_one(user_entry)
         
-            session_header = session + "; Max-Age=10800; HttpOnly"
+            session_header = session + "; Max-Age=10800; HttpOnly; Path=/"
             cookie_headers["session"] = session_header
 
     else:
@@ -62,10 +64,22 @@ def create_message(request, handler):
         
         user_collection.insert_one(user_entry)
 
-        session_header = session + "; Max-Age=10800; HttpOnly"
+        session_header = session + "; Max-Age=10800; HttpOnly; Path=/"
         cookie_headers["session"] = session_header
 
         
+
+    # This code is to make sure that logged in users show their username instead of their author name
+    # when they type a message. For HW2.
+    if "auth_token" in request.cookies:
+        hashed_auth_token = request.cookies["auth_token"]
+        hashed_auth_token = hashlib.sha256(hashed_auth_token.encode()).hexdigest()
+        results = list(account_collection.find({"auth_token": hashed_auth_token}))
+        if results:
+            username = results[0]["username"]
+            author = username
+
+
     #print("\n\n" + str(session) + "\n\n")
 
     #cookie_headers["id"] = message_id
@@ -99,9 +113,20 @@ def create_message(request, handler):
     message_imageURL = results[0]["imageURL"]
     database_entry["imageURL"] = message_imageURL
 
+    # If the user is logged in and has uploaded an avatar picture, we have their chat messages show the 
+    # avatar picture instead. HW3 LO.
+    if "auth_token" in request.cookies:
+        hashed_auth_token = request.cookies["auth_token"]
+        hashed_auth_token = hashlib.sha256(hashed_auth_token.encode()).hexdigest()
+        results = list(account_collection.find({"auth_token": hashed_auth_token}))
+        if results:
+            avatar_imageURL = results[0].get("imageURL")
+            if avatar_imageURL:
+                database_entry["imageURL"] = avatar_imageURL
+
 
     chat_collection.insert_one(database_entry)
-
+    print()
     handler.request.sendall(res.to_data())
 
 
@@ -122,6 +147,8 @@ def dicebear(author):
 
 
 def get_message(request, handler):
+    print("COOKIES:")
+    print(request.cookies)
     res = Response()
     response_headers = {}
 
@@ -156,6 +183,32 @@ def update_message(request, handler):
     updated_message = request_body["content"]
 
     message_id = request.path.removeprefix("/api/chats/")
+
+
+    # This is so that a user can still update his own messages if he is logged in to his account,
+    # even if he deleted his "session" cookie. For HW2.
+    if "auth_token" in request.cookies:
+        auth_token = request.cookies["auth_token"]
+        hashed_auth_token = hashlib.sha256(auth_token.encode()).hexdigest()
+
+        account_results = list(account_collection.find({"auth_token": hashed_auth_token}))
+        username_of_session = None
+        if account_results:
+            username_of_session = account_results[0]["username"]
+        message_results = list(chat_collection.find({"id": message_id, "author": username_of_session}))
+        if account_results and message_results:
+            update = chat_collection.update_one({"id": message_id, "author": username_of_session}, {"$set": {"content": html.escape(updated_message), "updated": True}})
+            response_headers["Content-Type"] = "text/plain; charset=UTF-8"
+
+            response_message = "200 OK Updated"
+            response_headers["Content-Length"] = str(len(response_message))
+
+            res.headers(response_headers)
+            res.text(response_message)
+            handler.request.sendall(res.to_data())
+            return
+
+
     if "session" in request.cookies:
         user_results = list(user_collection.find({"session": request.cookies["session"]}))
         author_of_session = None
@@ -190,6 +243,31 @@ def delete_message(request, handler):
     response_headers = {}
 
     message_id = request.path.removeprefix("/api/chats/")
+
+    # This is so that a user can still delete his own messages if he is logged in to his account,
+    # even if he deleted his "session" cookie. For HW2.
+    if "auth_token" in request.cookies:
+        auth_token = request.cookies["auth_token"]
+        hashed_auth_token = hashlib.sha256(auth_token.encode()).hexdigest()
+
+        account_results = list(account_collection.find({"auth_token": hashed_auth_token}))
+        username_of_session = None
+        if account_results:
+            username_of_session = account_results[0]["username"]
+        message_results = list(chat_collection.find({"id": message_id, "author": username_of_session}))
+        if account_results and message_results:
+            delete = chat_collection.delete_one({"id": message_id, "author": username_of_session})
+            response_headers["Content-Type"] = "text/plain; charset=UTF-8"
+
+            response_message = "200 OK Updated"
+            response_headers["Content-Length"] = str(len(response_message))
+
+            res.headers(response_headers)
+            res.text(response_message)
+            handler.request.sendall(res.to_data())
+            return
+        
+
     if "session" in request.cookies:
         user_results = list(user_collection.find({"session": request.cookies["session"]}))
         author_of_session = None
